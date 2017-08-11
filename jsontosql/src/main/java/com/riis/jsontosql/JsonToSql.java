@@ -28,7 +28,7 @@ public class JsonToSql {
 		JSONParser parser = new JSONParser();
 		Set<String> routeNumber = new HashSet<>();
 		JDBCPreparedStatementSelectExample jdbc = new JDBCPreparedStatementSelectExample();
-		
+
 		try {
 			Object obj = parser.parse(new FileReader("/home/kavi/dumps/smartbus/route125SundayNorthbound"));
 			JSONArray jsonArray = (JSONArray) obj;
@@ -53,7 +53,7 @@ public class JsonToSql {
 					}
 
 				}
-				jdbc.insertIntoSmartBusSchedulesTable(stopName,times);
+				jdbc.insertIntoSmartBusSchedulesTable(stopName, times);
 				System.out.println(times);
 			}
 
