@@ -1,0 +1,2 @@
+# etadetroitjsontosql
+update smart weekend
