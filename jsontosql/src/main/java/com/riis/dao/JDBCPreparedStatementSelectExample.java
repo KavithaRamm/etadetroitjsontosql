@@ -15,28 +15,31 @@ public class JDBCPreparedStatementSelectExample {
 	private Connection dbConnection = null;
 	private PreparedStatement preparedStatement = null;
 	private ResultSet resultSet = null;
-	private String direction = "northbound";
 
-	public void insertIntoDBTable(String stopName, List<String> times) throws SQLException {
+	public void insertIntoDBTable(String routeNumber, String day, String direction, String stopName, List<String> times) throws SQLException {
 		for (int i = 0; i < times.size(); i++) {
-			resultSet = getStopID(stopName);
+			resultSet = getStopID(stopName, direction);
 			while (resultSet.next()) {
-				insertIntoSmartBusSchedulesTable(stopName, times, i);
+				insertIntoSmartBusSchedulesTable(routeNumber, day, direction, stopName, times, i);
 			}
 		}
 	}
 
 	/* Inserting into Smart_Bus_Schedules Table */
-	private void insertIntoSmartBusSchedulesTable(String stopName, List<String> times, int i) throws SQLException {
+	private void insertIntoSmartBusSchedulesTable(String routeNumber, String day, String direction, String stopName, List<String> times, int i)
+			throws SQLException {
 		String stopID = resultSet.getString("stopId");
 		System.out.println("stopID : " + stopID);
-		String insertSQL = "insert into test_Smart_Bus_Schedules values('SmartBus', '280', 'NORTHBOUND', 'SATURDAY',?,?, ?, NULL)";
+		String insertSQL = "insert into test_Smart_Bus_Schedules values('SmartBus',?,?,?,?,?,?, NULL)";
 		try {
 			dbConnection = getDBConnection();
 			preparedStatement = dbConnection.prepareStatement(insertSQL);
-			preparedStatement.setString(1, stopID);
-			preparedStatement.setString(2, stopName);
-			preparedStatement.setString(3, times.get(i));
+			preparedStatement.setString(1, routeNumber);
+			preparedStatement.setString(2, direction);
+			preparedStatement.setString(3, day);
+			preparedStatement.setString(4, stopID);
+			preparedStatement.setString(5, stopName);
+			preparedStatement.setString(6, times.get(i));
 			preparedStatement.execute();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -51,7 +54,7 @@ public class JDBCPreparedStatementSelectExample {
 	}
 
 	/* Getting the stopID from DB */
-	private ResultSet getStopID(String stopName) {
+	private ResultSet getStopID(String stopName, String direction) {
 		String selectSQL = "SELECT distinct stopId FROM Smart_Bus_Schedules where stp_name =" + "'" + stopName + "'" + " and direction =" + "'"
 				+ direction + "'";
 		try {

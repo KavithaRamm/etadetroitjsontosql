@@ -1,5 +1,6 @@
 package com.riis.jsontosql;
 
+import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.google.common.base.CharMatcher;
 import com.riis.dao.JDBCPreparedStatementSelectExample;
 
 public class JsonToSql {
@@ -27,23 +29,44 @@ public class JsonToSql {
 		JSONParser parser = new JSONParser();
 		Set<String> routeNumber = new HashSet<>();
 		JDBCPreparedStatementSelectExample jdbc = new JDBCPreparedStatementSelectExample();
-		try {
-			Object obj = parser.parse(new FileReader("/home/kavi/dumps/smartbus/route280Saturdaynorthbound"));
-			JSONArray jsonArray = (JSONArray) obj;
-			for (int i = 0; i < jsonArray.size(); i++) {
-				JSONObject jsonObj = (JSONObject) jsonArray.get(i);
-				String stopName = (String) jsonObj.get("Name");
-				System.out.println("Stop name " + stopName);
-				JSONArray timesJSONArray = (JSONArray) jsonObj.get("Times");
-				List<String> times = getTimeFromJSON(routeNumber, timesJSONArray);
-				jdbc.insertIntoDBTable(stopName, times);
-				System.out.println(times);
-			}
+		List<String> listOfFilePaths = getListOfFiles();
+		for (String filePath : listOfFilePaths) {
 
-		} catch (Exception e) {
-			e.printStackTrace();
+			try {
+				Object obj = parser.parse(new FileReader(filePath));
+				JSONArray jsonArray = (JSONArray) obj;
+				for (int i = 0; i < jsonArray.size(); i++) {
+					JSONObject jsonObj = (JSONObject) jsonArray.get(i);
+					String stopName = (String) jsonObj.get("Name");
+					System.out.println("Stop name " + stopName);
+					JSONArray timesJSONArray = (JSONArray) jsonObj.get("Times");
+					List<String> times = getTimeFromJSON(routeNumber, timesJSONArray);
+					String[] routeDetails = getRouteDirecctionDayFromFileName(filePath);
+					String routeNumberFromFileName = routeDetails[0];
+					String routeNum = getRouteNumber(routeNumberFromFileName);
+					String day = routeDetails[1];
+					String direction = routeDetails[2];
+					jdbc.insertIntoDBTable(routeNum, day, direction, stopName, times);
+					System.out.println(times);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			System.out.println(routeNumber);
 		}
-		System.out.println(routeNumber);
+	}
+
+	private String getRouteNumber(String routeNumberFromFileName) {
+		CharMatcher ASCII_DIGITS = CharMatcher.inRange('0', '9').precomputed();
+		String routeNum = ASCII_DIGITS.retainFrom(routeNumberFromFileName);
+		return routeNum;
+	}
+
+	private String[] getRouteDirecctionDayFromFileName(String filePath) {
+		String string = filePath;
+		String[] routeDetails = string.split("_");
+		return routeDetails;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -65,5 +88,20 @@ public class JsonToSql {
 
 		}
 		return times;
+	}
+
+	public List<String> getListOfFiles() {
+		File folder = new File("/home/kavi/dumps/dummysmartbus");
+		File[] arrayOffiles = folder.listFiles();
+		List<String> listOfFiles = new ArrayList<>();
+
+		for (File file : arrayOffiles) {
+			if (file.isFile()) {
+				listOfFiles.add(file.getAbsolutePath());
+				// System.out.println(file.getAbsolutePath());
+				// System.out.println(file.getName());
+			}
+		}
+		return listOfFiles;
 	}
 }
