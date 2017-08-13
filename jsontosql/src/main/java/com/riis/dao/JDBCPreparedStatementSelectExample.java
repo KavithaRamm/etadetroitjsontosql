@@ -9,7 +9,7 @@ import java.util.List;
 
 public class JDBCPreparedStatementSelectExample {
 	private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
-	private static final String DB_CONNECTION = "jdbc:mysql://localhost/eta";
+	private static final String DB_CONNECTION = "jdbc:mysql://localhost/eta?autoReconnect=true&useSSL=false";
 	private static final String DB_USER = "root";
 	private static final String DB_PASSWORD = "abcd4561";
 	private Connection dbConnection = null;
@@ -30,7 +30,7 @@ public class JDBCPreparedStatementSelectExample {
 	private void insertIntoSmartBusSchedulesTable(String stopName, List<String> times, int i) throws SQLException {
 		String stopID = resultSet.getString("stopId");
 		System.out.println("stopID : " + stopID);
-		String insertSQL = "insert into Smart_Bus_Schedules values('SmartBus', '125', 'NORTHBOUND', 'SUNDAY',?,?, ?, NULL)";
+		String insertSQL = "insert into test_Smart_Bus_Schedules values('SmartBus', '280', 'NORTHBOUND', 'SATURDAY',?,?, ?, NULL)";
 		try {
 			dbConnection = getDBConnection();
 			preparedStatement = dbConnection.prepareStatement(insertSQL);

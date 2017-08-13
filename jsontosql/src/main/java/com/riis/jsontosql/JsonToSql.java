@@ -27,9 +27,8 @@ public class JsonToSql {
 		JSONParser parser = new JSONParser();
 		Set<String> routeNumber = new HashSet<>();
 		JDBCPreparedStatementSelectExample jdbc = new JDBCPreparedStatementSelectExample();
-
 		try {
-			Object obj = parser.parse(new FileReader("/home/kavi/dumps/smartbus/route125SaturdaySouthbound"));
+			Object obj = parser.parse(new FileReader("/home/kavi/dumps/smartbus/route280Saturdaynorthbound"));
 			JSONArray jsonArray = (JSONArray) obj;
 			for (int i = 0; i < jsonArray.size(); i++) {
 				JSONObject jsonObj = (JSONObject) jsonArray.get(i);
