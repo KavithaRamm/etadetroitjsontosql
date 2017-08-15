@@ -2,6 +2,7 @@ package com.riis.jsontosql;
 
 import java.io.File;
 import java.io.FileReader;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,7 +15,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.google.common.base.CharMatcher;
-import com.riis.dao.JDBCPreparedStatementSelectExample;
+import com.riis.dao.JDBCPreparedStatement;
 
 public class JsonToSql {
 
@@ -28,7 +29,7 @@ public class JsonToSql {
 	private void convertJsonToSql() {
 		JSONParser parser = new JSONParser();
 		Set<String> routeNumber = new HashSet<>();
-		JDBCPreparedStatementSelectExample jdbc = new JDBCPreparedStatementSelectExample();
+		JDBCPreparedStatement jdbc = new JDBCPreparedStatement();
 		List<String> listOfFilePaths = getListOfFiles();
 		for (String filePath : listOfFilePaths) {
 
@@ -36,25 +37,34 @@ public class JsonToSql {
 				Object obj = parser.parse(new FileReader(filePath));
 				JSONArray jsonArray = (JSONArray) obj;
 				for (int i = 0; i < jsonArray.size(); i++) {
-					JSONObject jsonObj = (JSONObject) jsonArray.get(i);
-					String stopName = (String) jsonObj.get("Name");
-					System.out.println("Stop name " + stopName);
-					JSONArray timesJSONArray = (JSONArray) jsonObj.get("Times");
-					List<String> times = getTimeFromJSON(routeNumber, timesJSONArray);
-					String[] routeDetails = getRouteDirecctionDayFromFileName(filePath);
-					String routeNumberFromFileName = routeDetails[0];
-					String routeNum = getRouteNumber(routeNumberFromFileName);
-					String day = routeDetails[1];
-					String direction = routeDetails[2];
-					jdbc.insertIntoDBTable(routeNum, day, direction, stopName, times);
-					System.out.println(times);
+					getRouteNumberDayDirectionStopNameTimes(routeNumber, jdbc, filePath, jsonArray, i);
 				}
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println(routeNumber);
+			System.out.println("RouteNumber"+routeNumber);
 		}
+	}
+
+	private void getRouteNumberDayDirectionStopNameTimes(Set<String> routeNumber, JDBCPreparedStatement jdbc, String filePath,
+			JSONArray jsonArray, int i) throws SQLException {
+		JSONObject jsonObj = (JSONObject) jsonArray.get(i);
+		String stopName = (String) jsonObj.get("Name");
+		System.out.println("Stop name " + stopName);
+		JSONArray timesJSONArray = (JSONArray) jsonObj.get("Times");
+		List<String> times = getTimeFromJSON(routeNumber, timesJSONArray);
+		String[] routeDetails = getRouteDirecctionDayFromFileName(filePath);
+		String routeNumberFromFileName = routeDetails[0];
+		String routeNum = getRouteNumber(routeNumberFromFileName);
+		String day = routeDetails[1];
+		String direction = routeDetails[2];
+		jdbc.insertIntoDBTable(routeNum, day, direction, stopName, times);
+		System.out.println("routeNum"+routeNum);
+		System.out.println("day"+day);
+		System.out.println("direction"+direction);
+		System.out.println("stopname"+stopName);
+		System.out.println(times);
 	}
 
 	private String getRouteNumber(String routeNumberFromFileName) {
@@ -85,7 +95,6 @@ public class JsonToSql {
 					times.add((String) pair.getValue());
 				}
 			}
-
 		}
 		return times;
 	}
@@ -98,8 +107,6 @@ public class JsonToSql {
 		for (File file : arrayOffiles) {
 			if (file.isFile()) {
 				listOfFiles.add(file.getAbsolutePath());
-				// System.out.println(file.getAbsolutePath());
-				// System.out.println(file.getName());
 			}
 		}
 		return listOfFiles;
